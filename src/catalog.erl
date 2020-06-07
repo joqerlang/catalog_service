@@ -5,17 +5,13 @@
 %%% -------------------------------------------------------------------
 -module(catalog).
  
-
-
 %% --------------------------------------------------------------------
 %% Include files
 %% --------------------------------------------------------------------
 
-
--include("common_macros.hrl").
-
 %-compile(export_all).
--export([update_catalog/3]).
+-export([all/1,get_service/2,
+	 update_catalog/3]).
 
 
 
@@ -23,6 +19,12 @@
 %% ====================================================================
 %% External functions
 %% ====================================================================
+all(Catalog)->
+    Catalog.
+
+get_service(WantedServiceId,Catalog)->
+    [{ServiceId,Type,Source}||{ServiceId,Type,Source}<-Catalog,
+				   ServiceId==WantedServiceId].
 
 %% @doc: update_catalog(GitUrl,Dir,FileName)->{ok,Config}|{error,Err} retreives the latets  config spec from git
 

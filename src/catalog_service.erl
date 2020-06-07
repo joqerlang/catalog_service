@@ -10,7 +10,7 @@
 %% --------------------------------------------------------------------
 %% Include files
 %% --------------------------------------------------------------------
--include("common_macros.hrl").
+
 %% --------------------------------------------------------------------
 
 
@@ -18,7 +18,9 @@
 %% Key Data structures
 %% 
 %% --------------------------------------------------------------------
--record(state,{catalog}).
+-record(state,{catalog,
+	       app_spec,
+	       dns}).
 
 
 %% --------------------------------------------------------------------
@@ -28,8 +30,18 @@
 -define(CATALOG_URL,"https://github.com/joqerlang/catalog.git/").
 -define(CATALOG_DIR,"catalog").
 -define(CATALOG_FILENAME,"catalog.info").
+-define(APP_SPEC_URL,"https://github.com/joqerlang/app_config.git/").
+-define(APP_SPEC_DIR,"app_config").
+-define(APP_SPEC_FILENAME,"app.spec").
 
--export([get_service/1,get_all/0,update_catalog/0
+-export([% Catalog part
+	 get_service_config/1,update_catalog/0,
+	 %% App spec part
+	 update_app_spec/0,
+	 get_service_addr/1,
+	 available/0,missing/0,obsolite/0,
+	 %% Dns support
+	 dns_update/0,dns_get_all/0,dns_get/1,dns_add/2,dns_delete/2
 	]).
 
 -export([start/0,
@@ -61,13 +73,35 @@ ping()->
 
 %%-----------------------------------------------------------------------
 
-%%
-get_all()->
-    gen_server:call(?MODULE, {get_all},infinity).
-get_service(ServiceId)->
-    gen_server:call(?MODULE, {get_service,ServiceId},infinity).
+%% App spec functions
+update_app_spec()->
+    gen_server:call(?MODULE, {update_app_spec},infinity).
+get_service_addr(ServiceId)->
+    gen_server:call(?MODULE, {get_service_addr,ServiceId},infinity).
+available()->
+    gen_server:call(?MODULE, {available},infinity).
+missing()->    
+    gen_server:call(?MODULE, {missing},infinity).
+obsolite()->
+    gen_server:call(?MODULE, {obsolite},infinity).
+
+%% Catalog functions
+get_service_config(ServiceId)->
+    gen_server:call(?MODULE, {get_service_config,ServiceId},infinity).
 update_catalog()->
      gen_server:call(?MODULE, {update_catalog},infinity).
+
+%% Dns support functions
+dns_update()->
+    gen_server:call(?MODULE, {dns_update},infinity).
+dns_get_all()->
+    gen_server:call(?MODULE, {dns_get_all},infinity).
+dns_get(ServiceId)->
+    gen_server:call(?MODULE, {dns_get,ServiceId},infinity).
+dns_add(ServiceId,Node)->
+    gen_server:cast(?MODULE, {dns_add,ServiceId,Node}).
+dns_delete(ServiceId,Node)->
+    gen_server:cast(?MODULE, {dns_delete,ServiceId,Node}).
 
 heart_beat(Interval)->
     gen_server:cast(?MODULE, {heart_beat,Interval}).
@@ -88,7 +122,9 @@ heart_beat(Interval)->
 %% --------------------------------------------------------------------
 init([]) ->
     {ok,Catalog}=catalog:update_catalog(?CATALOG_URL,?CATALOG_DIR,?CATALOG_FILENAME),
-    {ok, #state{catalog=Catalog}}.   
+    {ok,AppSpec}=app_spec:update_info(?APP_SPEC_URL,?APP_SPEC_DIR,?APP_SPEC_FILENAME),
+    {ok,DnsInfo}=dns:update_info(Catalog),
+    {ok, #state{catalog=Catalog,app_spec=AppSpec,dns=DnsInfo}}.   
     
 %% --------------------------------------------------------------------
 %% Function: handle_call/3
@@ -104,13 +140,37 @@ handle_call({ping},_From,State) ->
     Reply={pong,node(),?MODULE},
     {reply, Reply, State};
 
-handle_call({get_all}, _From, State) ->
-    Reply=State#state.catalog,
+%% Dns functions
+handle_call({dns_get_all},_From,State) ->
+    Reply=dns:get_all(State#state.dns),
+    {reply, Reply, State};
+
+handle_call({dns_get,ServiceId},_From,State) ->
+    Reply=dns:get(ServiceId,State#state.dns),
+    {reply, Reply, State};
+
+%% App spec functions
+
+handle_call({available}, _From, State) ->
+    Reply=app_spec:available(State#state.catalog),
+    {reply, Reply,State};
+
+handle_call({missing}, _From, State) ->
+      Reply=app_spec:missing(State#state.catalog,State#state.app_spec),
+    {reply, Reply,State};
+
+handle_call({obsolite}, _From, State) ->
+      Reply=app_spec:obsolite(State#state.catalog,State#state.app_spec),
+    {reply, Reply,State};
+
+%% Catalog functions
+
+handle_call({get_service,all}, _From, State) ->
+    Reply=catalog:all(State#state.catalog),
     {reply, Reply,State};
 
 handle_call({get_service,WantedServiceId}, _From, State) ->
-    Reply=[{ServiceId,Type,Source}||{ServiceId,Type,Source}<-State#state.catalog,
-				   ServiceId==WantedServiceId],
+    Reply=catalog:get_service(WantedServiceId,State#state.catalog),
     {reply, Reply,State};
 handle_call({update_catalog}, _From, State) ->
     Reply=case catalog:update_catalog(?CATALOG_URL,?CATALOG_DIR,?CATALOG_FILENAME) of
@@ -140,6 +200,22 @@ handle_call(Request, From, State) ->
 handle_cast({heart_beat,Interval}, State) ->
     spawn(fun()->h_beat(Interval) end),    
     {noreply, State};
+
+handle_cast({dns_update}, State) ->
+    {ok,DnsInfo}=dns:update_info(State#state.catalog),
+    NewState=State#state{dns=DnsInfo},
+    {noreply, NewState};
+
+handle_cast({dns_add,ServiceId,Node}, State) ->
+    {ok,DnsInfo}=dns:add(ServiceId,Node,State#state.dns),
+    NewState=State#state{dns=DnsInfo},
+    {noreply, NewState};
+
+handle_cast({dns_delete,ServiceId,Node}, State) ->
+    {ok,DnsInfo}=dns:delete(ServiceId,Node,State#state.dns),
+    NewState=State#state{dns=DnsInfo},
+    {noreply, NewState};
+
 
 handle_cast(Msg, State) ->
     io:format("unmatched match cast ~p~n",[{?MODULE,?LINE,Msg}]),

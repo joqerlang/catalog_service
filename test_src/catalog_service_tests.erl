@@ -10,7 +10,6 @@
 %% Include files
 %% --------------------------------------------------------------------
 -include_lib("eunit/include/eunit.hrl").
--include("common_macros.hrl").
 %% --------------------------------------------------------------------
 
 %% External exports
@@ -36,8 +35,16 @@ cases_test()->
 
     %% Start application tests
     
+    
+    ?debugMsg("dns test "),
+    ?assertEqual(ok,dns_test:start()),
+
     ?debugMsg("catalog test "),
     ?assertEqual(ok,cat_test:start()),
+    
+    ?debugMsg("app_spec test "),
+    ?assertEqual(ok,app_spec_test:start()),
+
 
     ?debugMsg("Start stop_test_system:start"),
     %% End application tests
@@ -54,7 +61,6 @@ setup()->
     ok.
 
 cleanup()->
-   % ok=application:stop(catalog_service),
     init:stop().
 
 
