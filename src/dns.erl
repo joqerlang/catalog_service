@@ -12,7 +12,7 @@
 %% --------------------------------------------------------------------
 
 %-compile(export_all).
--export([get_all/1,get/2,update_info/1,dns_add/3,dns_delete/3]).
+-export([all/1,get/2,update/1,add/3,delete/3]).
 
 
 
@@ -27,8 +27,8 @@
 %% --------------------------------------------------------------------
 %% @doc: get(ServiceId) returns of a list of nodes that have ServiceId all running applications
 
--spec(get_all(DnsInfo::[{ServiceId::string(),Node::atom()}])->[{ServiceId::string(),Node::atom()}]|[]).
-get_all(DnsInfo)->
+-spec(all(DnsInfo::[{ServiceId::string(),Node::atom()}])->[{ServiceId::string(),Node::atom()}]|[]).
+all(DnsInfo)->
     DnsInfo.
 
 
@@ -39,27 +39,27 @@ get(WantedServiceId,DnsInfo)->
 				      WantedServiceId==ServiceId],
     ActiveServices.
 
-%% @doc: update_info(Catalog) update the dns list
+%% @doc: update(Catalog) update the dns list
 
--spec(update_info(Catalog::[{ServiceId::string(),Type::atom(),Source::string()}])->[{ServiceId::string(),Node::atom()}]| []).
-update_info(Catalog)->
+-spec(update(Catalog::[{ServiceId::string(),Type::atom(),Source::string()}])->[{ServiceId::string(),Node::atom()}]| []).
+update(Catalog)->
     AvailableServices=app_spec:available(Catalog),
     {ok,AvailableServices}.
 
-%% @doc: dns_add(ServiceId,Node,DnsInfo) -> New DnsInfo list
+%% @doc: add(ServiceId,Node,DnsInfo) -> New DnsInfo list
 
--spec(dns_add(ServiceId::string(),Node::atom(),DnsInfo::[tuple()])->DnsInfo::[tuple()]|[]).
-dns_add(ServiceId,Node,DnsInfo)->
+-spec(add(ServiceId::string(),Node::atom(),DnsInfo::[tuple()])->DnsInfo::[tuple()]|[]).
+add(ServiceId,Node,DnsInfo)->
     Removed=[{S1,N1}||{S1,N1}<-DnsInfo,
 		      {ServiceId,Node}/={S1,N1}],
     NewDnsInfo=[{ServiceId,Node}|Removed],
     {ok,NewDnsInfo}.
 
 
-%% @doc:dns_delete(ServiceId,Node,DnsInfo) -> New DnsInfo list
+%% @doc:delete(ServiceId,Node,DnsInfo) -> New DnsInfo list
 
--spec(dns_delete(ServiceId::string(),Node::atom(),DnsInfo::[tuple()])->DnsInfo::[tuple()]|[]).
-dns_delete(ServiceId,Node,DnsInfo)->
+-spec(delete(ServiceId::string(),Node::atom(),DnsInfo::[tuple()])->DnsInfo::[tuple()]|[]).
+delete(ServiceId,Node,DnsInfo)->
     NewDnsInfo=[{S1,N1}||{S1,N1}<-DnsInfo,
 		      {ServiceId,Node}/={S1,N1}],
     {ok,NewDnsInfo}.

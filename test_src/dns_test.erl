@@ -47,7 +47,12 @@ start()->
     ?assertEqual(ok,one_services()),
     ?debugMsg("check all  services"),
     ?assertEqual(ok,all_services()),	
- 
+    ?debugMsg("dns add service"),
+    ?assertEqual(ok,add_service()),
+    ?debugMsg("dns delete service"),
+    ?assertEqual(ok,delete_service()), 
+    ?debugMsg("dns cleanup"),
+    ?assertEqual(ok,clean_up()), 
     ok.
 %% --------------------------------------------------------------------
 %% Function:start/0 
@@ -56,35 +61,64 @@ start()->
 %% -------------------------------------------------------------------
 
 no_services()->
-    {ok,DnsInfo}=dns:update_info(?CATALOG),
+    {ok,DnsInfo}=dns:update(?CATALOG),
     ?assertEqual([],DnsInfo),
-    ?assertEqual([],dns:get_all(DnsInfo)),
+    ?assertEqual([],dns:all(DnsInfo)),
     ?assertEqual([],dns:get("adder_service",DnsInfo)),
     ok.
 
 one_services()->
     start_app("adder_service"),
-    {ok,DnsInfo}=dns:update_info(?CATALOG),
+    {ok,DnsInfo}=dns:update(?CATALOG),
     ?assertEqual([{"adder_service",catalog_dir_test@asus}],DnsInfo),
-    ?assertEqual([{"adder_service",catalog_dir_test@asus}],dns:get_all(DnsInfo)),
+    ?assertEqual([{"adder_service",catalog_dir_test@asus}],dns:all(DnsInfo)),
     ?assertEqual([{"adder_service",catalog_dir_test@asus}],dns:get("adder_service",DnsInfo)),
     ?assertEqual([],dns:get("multi_service",DnsInfo)),
     stop_app("adder_service"),
     ok.
 all_services()->
     [start_app(ServiceId)||{ServiceId,_}<-?APP_SPEC],
-    {ok,DnsInfo}=dns:update_info(?CATALOG),
+    {ok,DnsInfo}=dns:update(?CATALOG),
     ?assertEqual([{"subtract_service",catalog_dir_test@asus},
 		  {"divi_service",catalog_dir_test@asus},
 		  {"adder_service",catalog_dir_test@asus}],DnsInfo),
     ?assertEqual([{"subtract_service",catalog_dir_test@asus},
 		  {"divi_service",catalog_dir_test@asus},
-		  {"adder_service",catalog_dir_test@asus}],dns:get_all(DnsInfo)),
+		  {"adder_service",catalog_dir_test@asus}],dns:all(DnsInfo)),
     ?assertEqual([{"adder_service",catalog_dir_test@asus}],dns:get("adder_service",DnsInfo)),
     ?assertEqual([],dns:get("multi_service",DnsInfo)),
-    [stop_app(ServiceId)||{ServiceId,_}<-?APP_SPEC],
     ok.
 
+add_service()->
+    {ok,DnsInfo}=dns:update(?CATALOG),
+    ?assertEqual([{"subtract_service",catalog_dir_test@asus},
+		  {"divi_service",catalog_dir_test@asus},
+		  {"adder_service",catalog_dir_test@asus}],DnsInfo),
+    {ok,NewDnsInfo}=dns:add("new_service",catalog_dir_test@new,DnsInfo),
+    ?assertEqual([{"new_service",catalog_dir_test@new},
+		  {"subtract_service",catalog_dir_test@asus},
+		  {"divi_service",catalog_dir_test@asus},
+		  {"adder_service",catalog_dir_test@asus}],NewDnsInfo),
+    ?assertEqual([{"new_service",catalog_dir_test@new}],dns:get("new_service",NewDnsInfo)),
+    ok.
+delete_service()->
+    {ok,DnsInfo}=dns:update(?CATALOG),
+    ?assertEqual([{"subtract_service",catalog_dir_test@asus},
+		  {"divi_service",catalog_dir_test@asus},
+		  {"adder_service",catalog_dir_test@asus}],DnsInfo),
+    {ok,NewDnsInfo}=dns:delete("adder_service",catalog_dir_test@asus,DnsInfo),
+
+    ?assertEqual([{"subtract_service",catalog_dir_test@asus},
+		  {"divi_service",catalog_dir_test@asus}],NewDnsInfo),
+    ?assertEqual([{"subtract_service",catalog_dir_test@asus},
+		  {"divi_service",catalog_dir_test@asus}],dns:all(NewDnsInfo)), 
+    ?assertEqual([],dns:get("adder_service",NewDnsInfo)),   
+    ok.
+
+
+clean_up()->
+    [stop_app(ServiceId)||{ServiceId,_}<-?APP_SPEC],
+    ok.
 
 start_app(ServiceId)->
     EbinDir=filename:join(ServiceId,"ebin"),
