@@ -41,7 +41,7 @@
 	 get_service_addr/1,
 	 available/0,missing/0,obsolite/0,
 	 %% Dns support
-	 dns_update/0,dns_get_all/0,dns_get/1,dns_add/2,dns_delete/2
+	 dns_update/0,dns_all/0,dns_get/1,dns_add/2,dns_delete/2
 	]).
 
 -export([start/0,
@@ -94,8 +94,8 @@ update_catalog()->
 %% Dns support functions
 dns_update()->
     gen_server:call(?MODULE, {dns_update},infinity).
-dns_get_all()->
-    gen_server:call(?MODULE, {dns_get_all},infinity).
+dns_all()->
+    gen_server:call(?MODULE, {dns_all},infinity).
 dns_get(ServiceId)->
     gen_server:call(?MODULE, {dns_get,ServiceId},infinity).
 dns_add(ServiceId,Node)->
@@ -141,8 +141,8 @@ handle_call({ping},_From,State) ->
     {reply, Reply, State};
 
 %% Dns functions
-handle_call({dns_get_all},_From,State) ->
-    Reply=dns:get_all(State#state.dns),
+handle_call({dns_all},_From,State) ->
+    Reply=dns:all(State#state.dns),
     {reply, Reply, State};
 
 handle_call({dns_get,ServiceId},_From,State) ->
@@ -204,16 +204,19 @@ handle_cast({heart_beat,Interval}, State) ->
 handle_cast({dns_update}, State) ->
     {ok,DnsInfo}=dns:update_info(State#state.catalog),
     NewState=State#state{dns=DnsInfo},
+    dns:update_local_dns(DnsInfo),
     {noreply, NewState};
 
 handle_cast({dns_add,ServiceId,Node}, State) ->
     {ok,DnsInfo}=dns:add(ServiceId,Node,State#state.dns),
     NewState=State#state{dns=DnsInfo},
+    dns:update_local_dns(DnsInfo),
     {noreply, NewState};
 
 handle_cast({dns_delete,ServiceId,Node}, State) ->
     {ok,DnsInfo}=dns:delete(ServiceId,Node,State#state.dns),
     NewState=State#state{dns=DnsInfo},
+    dns:update_local_dns(DnsInfo),
     {noreply, NewState};
 
 

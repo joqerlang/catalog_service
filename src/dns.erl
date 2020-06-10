@@ -12,7 +12,8 @@
 %% --------------------------------------------------------------------
 
 %-compile(export_all).
--export([all/1,get/2,update/1,add/3,delete/3]).
+-export([all/1,get/2,update/1,add/3,delete/3,
+	update_local_dns/1]).
 
 
 
@@ -20,6 +21,12 @@
 %% ====================================================================
 %% External functions
 %% ====================================================================
+update_local_dns(DnsInfo)->
+    ActiveBootServices=get("boot_services",DnsInfo),
+    [rpc:cast(Node,boot_service,dns_update,[DnsInfo])||{_,Node}<-ActiveBootServices],
+    ok.
+
+
 %% --------------------------------------------------------------------
 %% 
 %% 
