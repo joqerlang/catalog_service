@@ -72,5 +72,5 @@ update_catalog()->
 		      {"log_service",dir,"/home/pi/erlang/erl_infra/"},
 		      {"lib_service",dir,"/home/pi/erlang/erl_infra/"},
 		      {"master_service",dir,"/home/pi/erlang/erl_infra/"}]}
-		 ,catalog:update_catalog(?CATALOG_URL,?CATALOG_DIR,?CATALOG_FILENAME)),
+		 ,catalog:update(?CATALOG_URL,?CATALOG_DIR,?CATALOG_FILENAME)),
 		 ok.

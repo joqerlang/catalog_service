@@ -11,7 +11,7 @@
 
 %-compile(export_all).
 -export([all/1,get_service/2,
-	 update_catalog/3]).
+	 update/3]).
 
 
 
@@ -26,10 +26,10 @@ get_service(WantedServiceId,Catalog)->
     [{ServiceId,Type,Source}||{ServiceId,Type,Source}<-Catalog,
 				   ServiceId==WantedServiceId].
 
-%% @doc: update_catalog(GitUrl,Dir,FileName)->{ok,Config}|{error,Err} retreives the latets  config spec from git
+%% @doc: update(GitUrl,Dir,FileName)->{ok,Config}|{error,Err} retreives the latets  config spec from git
 
--spec(update_catalog(GitUrl::string(),Dir::string(),FileName::string())->{ok,Config::[tuple()]}|{error,Err::string()}).
-update_catalog(GitUrl,Dir,FileName)->
+-spec(update(GitUrl::string(),Dir::string(),FileName::string())->{ok,Config::[tuple()]}|{error,Err::string()}).
+update(GitUrl,Dir,FileName)->
     os:cmd("rm -rf "++Dir),
     os:cmd("git clone "++GitUrl),
     {R,Info}=file:consult(filename:join(Dir,FileName)),

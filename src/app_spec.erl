@@ -12,7 +12,7 @@
 %% --------------------------------------------------------------------
 
 %-compile(export_all).
--export([update_info/3,available/1,missing/2,obsolite/2]).
+-export([update/3,available/1,missing/2,obsolite/2]).
 
 
  
@@ -25,7 +25,7 @@
 %% 
 %% {"master_sthlm_1",'master_sthlm_1@asus'}
 
-update_info(GitUrl,Dir,FileName)->
+update(GitUrl,Dir,FileName)->
     os:cmd("rm -rf "++Dir),
     os:cmd("git clone "++GitUrl),
     {R,Info}=file:consult(filename:join(Dir,FileName)),

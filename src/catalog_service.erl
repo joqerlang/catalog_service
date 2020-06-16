@@ -121,9 +121,9 @@ heart_beat(Interval)->
 %
 %% --------------------------------------------------------------------
 init([]) ->
-    {ok,Catalog}=catalog:update_catalog(?CATALOG_URL,?CATALOG_DIR,?CATALOG_FILENAME),
-    {ok,AppSpec}=app_spec:update_info(?APP_SPEC_URL,?APP_SPEC_DIR,?APP_SPEC_FILENAME),
-    {ok,DnsInfo}=dns:update_info(Catalog),
+    {ok,Catalog}=catalog:update(?CATALOG_URL,?CATALOG_DIR,?CATALOG_FILENAME),
+    {ok,AppSpec}=app_spec:update(?APP_SPEC_URL,?APP_SPEC_DIR,?APP_SPEC_FILENAME),
+    {ok,DnsInfo}=dns:update(Catalog),
     {ok, #state{catalog=Catalog,app_spec=AppSpec,dns=DnsInfo}}.   
     
 %% --------------------------------------------------------------------
