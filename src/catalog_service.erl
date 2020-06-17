@@ -26,7 +26,7 @@
 %% --------------------------------------------------------------------
 %% Definitions 
 %% --------------------------------------------------------------------
--define(MASTER_HEARTBEAT,40*1000).
+-define(CATALOG_HEARTBEAT,40*1000).
 -define(CATALOG_URL,"https://github.com/joqerlang/catalog.git/").
 -define(CATALOG_DIR,"catalog").
 -define(CATALOG_FILENAME,"catalog.info").
@@ -124,6 +124,7 @@ init([]) ->
     {ok,Catalog}=catalog:update(?CATALOG_URL,?CATALOG_DIR,?CATALOG_FILENAME),
     {ok,AppSpec}=app_spec:update(?APP_SPEC_URL,?APP_SPEC_DIR,?APP_SPEC_FILENAME),
     {ok,DnsInfo}=dns:update(Catalog),
+     spawn(fun()->h_beat(?CATALOG_HEARTBEAT,DnsInfo) end),
     {ok, #state{catalog=Catalog,app_spec=AppSpec,dns=DnsInfo}}.   
     
 %% --------------------------------------------------------------------
@@ -198,7 +199,7 @@ handle_call(Request, From, State) ->
 %%          {stop, Reason, State}            (terminate/2 is called)
 %% -------------------------------------------------------------------
 handle_cast({heart_beat,Interval}, State) ->
-    spawn(fun()->h_beat(Interval) end),    
+    spawn(fun()->h_beat(Interval,State#state.dns) end),    
     {noreply, State};
 
 handle_cast({dns_update}, State) ->
@@ -261,13 +262,10 @@ code_change(_OldVsn, State, _Extra) ->
 %% Description:
 %% Returns: non
 %% --------------------------------------------------------------------
-h_beat(Interval)->
-    case rpc:call(node(),orchistrater,campaign,[],60*1000) of
-	ok->
-	    ok;
-	Err->
-	    rpc:call(node(),lib_service,log_event,[?MODULE,?LINE,orchistrater,campaign,error,[Err]])
-    end,
+h_beat(Interval,DnsInfo)->
+    [IaasNode|_]=dns:get("iaas_service",DnsInfo),
+    ListOfNodes=rpc:call(IaasNode,iaas,available,[]),
+    [rpc:cast(Node,boot_service,dns_update,[DnsInfo])||Node<-ListOfNodes],
     timer:sleep(Interval),
     rpc:cast(node(),?MODULE,heart_beat,[Interval]).
 
