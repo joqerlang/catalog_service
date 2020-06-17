@@ -263,9 +263,13 @@ code_change(_OldVsn, State, _Extra) ->
 %% Returns: non
 %% --------------------------------------------------------------------
 h_beat(Interval,DnsInfo)->
-    [IaasNode|_]=dns:get("iaas_service",DnsInfo),
-    ListOfNodes=rpc:call(IaasNode,iaas,available,[]),
-    [rpc:cast(Node,boot_service,dns_update,[DnsInfo])||Node<-ListOfNodes],
+    case dns:get("iaas_service",DnsInfo) of
+	[IaasNode|_]->
+	    ListOfNodes=rpc:call(IaasNode,iaas,available,[]),
+	    [rpc:cast(Node,boot_service,dns_update,[DnsInfo])||{_,Node}<-ListOfNodes];
+	_->
+	    error
+end,
     timer:sleep(Interval),
     rpc:cast(node(),?MODULE,heart_beat,[Interval]).
 
