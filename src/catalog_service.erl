@@ -267,8 +267,8 @@ h_beat(Interval,DnsInfo)->
 	[IaasNode|_]->
 	    ListOfNodes=rpc:call(IaasNode,iaas,available,[]),
 	    [rpc:cast(Node,boot_service,dns_update,[DnsInfo])||{_,Node}<-ListOfNodes];
-	_->
-	    error
+	Err->
+	    glurk=Err
 end,
     timer:sleep(Interval),
     rpc:cast(node(),?MODULE,heart_beat,[Interval]).

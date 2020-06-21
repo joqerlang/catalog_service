@@ -45,6 +45,10 @@ cases_test()->
     ?debugMsg("app_spec test "),
     ?assertEqual(ok,app_spec_test:start()),
 
+  %  ?debugMsg("catalog_service test "),
+   % ?assertEqual(ok,service_test:start()),
+
+
 
     ?debugMsg("Start stop_test_system:start"),
     %% End application tests

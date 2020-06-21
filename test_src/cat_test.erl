@@ -43,8 +43,8 @@ start()->
     ?debugMsg("get_service"),
     ?assertEqual(ok,get_service()),
 
-    ?debugMsg("update_catalog"),
-    ?assertEqual(ok,update_catalog()),	 
+  %  ?debugMsg("update_catalog"),
+ %   ?assertEqual(ok,update_catalog()),	 
     ok.
 %% --------------------------------------------------------------------
 %% Function:start/0 
@@ -66,11 +66,12 @@ get_service()->
 
 update_catalog()->
     ?assertEqual({ok,[
-		      {"adder_service",git,"https://github.com/joq62/"},
-		      {"divi_service",git,"https://github.com/joq62/"},
-		      {"dns_service",dir,"/home/pi/erlang/erl_infra/"},
-		      {"log_service",dir,"/home/pi/erlang/erl_infra/"},
-		      {"lib_service",dir,"/home/pi/erlang/erl_infra/"},
-		      {"master_service",dir,"/home/pi/erlang/erl_infra/"}]}
-		 ,catalog:update(?CATALOG_URL,?CATALOG_DIR,?CATALOG_FILENAME)),
+		      {"catalog_service",git,"https://github.com/joqerlang/"},
+		      {"boot_service",git,"https://github.com/joqerlang/"},
+		      {"iaas_service",git,"https://github.com/joqerlang/"},
+		      {"orchistrate_service",git,"https://github.com/joqerlang/"},
+		      {"adder_service",git,"https://github.com/joqerlang/"},
+		      {"multi_service",git,"https://github.com/joqerlang/"},
+		      {"subtract_service",git,"https://github.com/joqerlang/"},
+		      {"divi_service",git,"https://github.com/joqerlang/"}]},catalog:update(?CATALOG_URL,?CATALOG_DIR,?CATALOG_FILENAME)),
 		 ok.
