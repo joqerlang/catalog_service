@@ -270,7 +270,7 @@ h_beat(Interval,DnsInfo)->
 	Err->
 	    {ok,Catalog}=catalog:update(?CATALOG_URL,?CATALOG_DIR,?CATALOG_FILENAME),
 	    {ok,NewDnsInfo}=dns:update(Catalog),
-	    spawn(fun()->catalog_service:update() end),
+	    spawn(fun()->catalog_service:dns_update() end),
 	    io:format("Err = ~p~n",[{?MODULE,?LINE,Err}]),
 	    io:format("Catalog = ~p~n",[{?MODULE,?LINE,Catalog}]),
 	    io:format("DnsInfo = ~p~n",[{?MODULE,?LINE,NewDnsInfo}])
