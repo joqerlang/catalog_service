@@ -37,7 +37,7 @@
 -export([% Catalog part
 	 get_service_config/1,update_catalog/0,
 	 %% App spec part
-	 update_app_spec/0,
+	 app_spec_update/0,
 	 get_service_addr/1,
 	 available/0,missing/0,obsolite/0,
 	 %% Dns support
@@ -74,8 +74,6 @@ ping()->
 %%-----------------------------------------------------------------------
 
 %% App spec functions
-update_app_spec()->
-    gen_server:call(?MODULE, {update_app_spec},infinity).
 get_service_addr(ServiceId)->
     gen_server:call(?MODULE, {get_service_addr,ServiceId},infinity).
 available()->
@@ -85,6 +83,8 @@ missing()->
 obsolite()->
     gen_server:call(?MODULE, {obsolite},infinity).
 
+app_spec_update()->
+    gen_server:cast(?MODULE, {app_spec_update}).
 %% Catalog functions
 get_service_config(ServiceId)->
     gen_server:call(?MODULE, {get_service_config,ServiceId},infinity).
@@ -221,6 +221,12 @@ handle_cast({dns_delete,ServiceId,Node}, State) ->
     {noreply, NewState};
 
 
+handle_cast({app_spec_update}, State) ->
+    {ok,AppSpec}=app_spec:update(?APP_SPEC_URL,?APP_SPEC_DIR,?APP_SPEC_FILENAME),
+    NewState=State#state{app_spec=AppSpec},
+    {noreply, NewState};
+
+
 handle_cast(Msg, State) ->
     io:format("unmatched match cast ~p~n",[{?MODULE,?LINE,Msg}]),
     {noreply, State}.
@@ -276,7 +282,8 @@ h_beat(Interval,DnsInfo)->
 	    io:format("NewDnsInfo = ~p~n",[{?MODULE,?LINE,NewDnsInfo}])
 	    
 	    
-end,
+    end,
+    spawn(fun()->catalog_service:app_spec_update() end),
     timer:sleep(Interval),
     rpc:cast(node(),?MODULE,heart_beat,[Interval]).
 
