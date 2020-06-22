@@ -203,7 +203,7 @@ handle_cast({heart_beat,Interval}, State) ->
     {noreply, State};
 
 handle_cast({dns_update}, State) ->
-    {ok,DnsInfo}=dns:update_info(State#state.catalog),
+    {ok,DnsInfo}=dns:update(State#state.catalog),
     NewState=State#state{dns=DnsInfo},
     dns:update_local_dns(DnsInfo),
     {noreply, NewState};
