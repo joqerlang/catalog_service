@@ -92,8 +92,7 @@ update_catalog()->
      gen_server:call(?MODULE, {update_catalog},infinity).
 
 %% Dns support functions
-dns_update()->
-    gen_server:call(?MODULE, {dns_update},infinity).
+
 dns_all()->
     gen_server:call(?MODULE, {dns_all},infinity).
 dns_get(ServiceId)->
@@ -102,7 +101,8 @@ dns_add(ServiceId,Node)->
     gen_server:cast(?MODULE, {dns_add,ServiceId,Node}).
 dns_delete(ServiceId,Node)->
     gen_server:cast(?MODULE, {dns_delete,ServiceId,Node}).
-
+dns_update()->
+    gen_server:cast(?MODULE, {dns_update}).
 heart_beat(Interval)->
     gen_server:cast(?MODULE, {heart_beat,Interval}).
 
