@@ -124,7 +124,7 @@ init([]) ->
     {ok,Catalog}=catalog:update(?CATALOG_URL,?CATALOG_DIR,?CATALOG_FILENAME),
     {ok,AppSpec}=app_spec:update(?APP_SPEC_URL,?APP_SPEC_DIR,?APP_SPEC_FILENAME),
     {ok,DnsInfo}=dns:update(Catalog),
-     spawn(fun()->h_beat(?CATALOG_HEARTBEAT,DnsInfo) end),
+    spawn(fun()->h_beat(?CATALOG_HEARTBEAT,DnsInfo) end),
     {ok, #state{catalog=Catalog,app_spec=AppSpec,dns=DnsInfo}}.   
     
 %% --------------------------------------------------------------------
@@ -268,7 +268,14 @@ h_beat(Interval,DnsInfo)->
 	    ListOfNodes=rpc:call(IaasNode,iaas,available,[]),
 	    [rpc:cast(Node,boot_service,dns_update,[DnsInfo])||{_,Node}<-ListOfNodes];
 	Err->
-	    io:format("~p~n",[{?MODULE,?LINE,Err}])
+	    {ok,Catalog}=catalog:update(?CATALOG_URL,?CATALOG_DIR,?CATALOG_FILENAME),
+	    {ok,DnsInfo}=dns:update(Catalog),
+	    spawn(fun()->catalog_service:update() end),
+	    io:format("Err = ~p~n",[{?MODULE,?LINE,Err}]),
+	    io:format("Catalog = ~p~n",[{?MODULE,?LINE,Catalog}]),
+	    io:format("DnsInfo = ~p~n",[{?MODULE,?LINE,DnsInfo}])
+	    
+	    
 end,
     timer:sleep(Interval),
     rpc:cast(node(),?MODULE,heart_beat,[Interval]).
