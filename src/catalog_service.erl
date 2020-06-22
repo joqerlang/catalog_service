@@ -264,8 +264,8 @@ code_change(_OldVsn, State, _Extra) ->
 %% --------------------------------------------------------------------
 h_beat(Interval,DnsInfo)->
     case dns:get("iaas_service",DnsInfo) of
-	[IaasNode|_]->
-	    ListOfNodes=rpc:call(IaasNode,iaas,available,[]),
+	[{_,IaasNode}|_]->
+	    ListOfNodes=rpc:call(IaasNode,iaas_service,available,[]),
 	    [rpc:cast(Node,boot_service,dns_update,[DnsInfo])||{_,Node}<-ListOfNodes];
 	Err->
 	    {ok,Catalog}=catalog:update(?CATALOG_URL,?CATALOG_DIR,?CATALOG_FILENAME),
@@ -273,7 +273,7 @@ h_beat(Interval,DnsInfo)->
 	    spawn(fun()->catalog_service:dns_update() end),
 	    io:format("Err = ~p~n",[{?MODULE,?LINE,Err}]),
 	    io:format("Catalog = ~p~n",[{?MODULE,?LINE,Catalog}]),
-	    io:format("DnsInfo = ~p~n",[{?MODULE,?LINE,NewDnsInfo}])
+	    io:format("NewDnsInfo = ~p~n",[{?MODULE,?LINE,NewDnsInfo}])
 	    
 	    
 end,
