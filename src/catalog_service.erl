@@ -269,11 +269,11 @@ h_beat(Interval,DnsInfo)->
 	    [rpc:cast(Node,boot_service,dns_update,[DnsInfo])||{_,Node}<-ListOfNodes];
 	Err->
 	    {ok,Catalog}=catalog:update(?CATALOG_URL,?CATALOG_DIR,?CATALOG_FILENAME),
-	    {ok,DnsInfo}=dns:update(Catalog),
+	    {ok,NewDnsInfo}=dns:update(Catalog),
 	    spawn(fun()->catalog_service:update() end),
 	    io:format("Err = ~p~n",[{?MODULE,?LINE,Err}]),
 	    io:format("Catalog = ~p~n",[{?MODULE,?LINE,Catalog}]),
-	    io:format("DnsInfo = ~p~n",[{?MODULE,?LINE,DnsInfo}])
+	    io:format("DnsInfo = ~p~n",[{?MODULE,?LINE,NewDnsInfo}])
 	    
 	    
 end,
