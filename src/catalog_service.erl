@@ -222,8 +222,12 @@ handle_cast({dns_delete,ServiceId,Node}, State) ->
 
 
 handle_cast({app_spec_update}, State) ->
-    {ok,AppSpec}=app_spec:update(?APP_SPEC_URL,?APP_SPEC_DIR,?APP_SPEC_FILENAME),
-    NewState=State#state{app_spec=AppSpec},
+   NewState= case app_spec:update(?APP_SPEC_URL,?APP_SPEC_DIR,?APP_SPEC_FILENAME) of
+		 {ok,AppSpec}->
+		     State#state{app_spec=AppSpec};
+		 {error,Err}->
+		     State
+	     end,
     {noreply, NewState};
 
 
