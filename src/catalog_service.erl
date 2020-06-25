@@ -274,19 +274,17 @@ code_change(_OldVsn, State, _Extra) ->
 %% Returns: non
 %% --------------------------------------------------------------------
 h_beat(Interval,DnsInfo)->
+    {ok,Catalog}=catalog:update(?CATALOG_URL,?CATALOG_DIR,?CATALOG_FILENAME),
+    {ok,NewDnsInfo}=dns:update(Catalog),
+    io:format("Catalog = ~p~n",[{?MODULE,?LINE,Catalog}]),
+    io:format("NewDnsInfo = ~p~n",[{?MODULE,?LINE,NewDnsInfo}]),
+    spawn(fun()->catalog_service:dns_update() end),
     case dns:get("iaas_service",DnsInfo) of
 	[{_,IaasNode}|_]->
 	    ListOfNodes=rpc:call(IaasNode,iaas_service,available,[]),
 	    [rpc:cast(Node,boot_service,dns_update,[DnsInfo])||{_,Node}<-ListOfNodes];
 	Err->
-	    {ok,Catalog}=catalog:update(?CATALOG_URL,?CATALOG_DIR,?CATALOG_FILENAME),
-	    {ok,NewDnsInfo}=dns:update(Catalog),
-	    spawn(fun()->catalog_service:dns_update() end),
-	    io:format("Err = ~p~n",[{?MODULE,?LINE,Err}]),
-	    io:format("Catalog = ~p~n",[{?MODULE,?LINE,Catalog}]),
-	    io:format("NewDnsInfo = ~p~n",[{?MODULE,?LINE,NewDnsInfo}])
-	    
-	    
+	    io:format("iaas_service not available Err = ~p~n",[{?MODULE,?LINE,Err}])
     end,
     spawn(fun()->catalog_service:app_spec_update() end),
     timer:sleep(Interval),
