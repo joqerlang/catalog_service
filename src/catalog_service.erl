@@ -38,7 +38,7 @@
 	 get_service_config/1,update_catalog/0,
 	 %% App spec part
 	 app_spec_update/0,
-	 get_service_addr/1,
+	 get_service/1,
 	 available/0,missing/0,obsolite/0,
 	 %% Dns support
 	 dns_update/0,dns_all/0,dns_get/1,dns_add/2,dns_delete/2
@@ -74,8 +74,8 @@ ping()->
 %%-----------------------------------------------------------------------
 
 %% App spec functions
-get_service_addr(ServiceId)->
-    gen_server:call(?MODULE, {get_service_addr,ServiceId},infinity).
+get_service(ServiceId)->
+    gen_server:call(?MODULE, {get_service,ServiceId},infinity).
 available()->
     gen_server:call(?MODULE, {available},infinity).
 missing()->    
@@ -226,6 +226,7 @@ handle_cast({app_spec_update}, State) ->
 		 {ok,AppSpec}->
 		     State#state{app_spec=AppSpec};
 		 {error,Err}->
+		     io:format("error ~p~n",[{?MODULE,?LINE,Err}]),
 		     State
 	     end,
     {noreply, NewState};
