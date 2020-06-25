@@ -28,10 +28,13 @@
 update(GitUrl,Dir,FileName)->
     os:cmd("rm -rf "++Dir),
     os:cmd("git clone "++GitUrl),
-    {R,Info}=file:consult(filename:join(Dir,FileName)),
-    {R,Info}.
-
-
+    AppFile=filename:join(Dir,FileName),
+    case file:is_file(AppFile) of
+	true->
+	    file:consult(filename:join(Dir,FileName));
+	false ->
+	    {error,[no_entry,?MODULE,?LINE,AppFile]}
+    end.
 
 
 %% --------------------------------------------------------------------
